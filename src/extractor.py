@@ -72,8 +72,8 @@ class Extractor:
             res += formatedLine + '\n'
         return res
     
-    def _get_format_info(slef, tag):
-        return next(info for info in slef.formats if info['itag'] == tag)
+    def _get_format_info(self, tag):
+        return next(info for info in self.formats if info['itag'] == tag)
 
     def get_format_url(self, tag):
         formatInfo = self._get_format_info(tag)
