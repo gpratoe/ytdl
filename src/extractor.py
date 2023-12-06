@@ -2,14 +2,16 @@ import re
 import requests
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import execjs
+import json
 
 class Extractor:
     def __init__(self, videoId):
         self.videoId = videoId
+        self.video_json = self._get_video_json(videoId)
         self.formats = self._get_video_formats(videoId)
         self.playerUrl = self._get_player_url(videoId)
         self.challenge = self._get_challenge(videoId)
-    def _get_video_formats(self, videoId):
+    def _get_video_json(self,videoId):
         url = f'https://www.youtube.com/youtubei/v1/player'
         data = {
             "videoId": videoId,
@@ -21,8 +23,11 @@ class Extractor:
             }
         }
         response = requests.post(url, json=data)
-        formats = response.json()['streamingData']['adaptiveFormats']
-
+        
+        return response.json()
+    
+    def _get_video_formats(self, videoId):
+        formats = self.video_json['streamingData']['adaptiveFormats']
         return formats
 
     def _get_player_url(self, videoId):
@@ -81,18 +86,22 @@ class Extractor:
         return url
     
     def solve_challenge(self, formatUrl):
-    
+        
         parsed_url = urlparse(formatUrl)
 
         query_params = parse_qs(parsed_url.query)
 
         n = query_params['n'][0]
 
-        n_transformed = execjs.eval(f"(({self.challenge})(String('{n}')).split)('{{ return a; }}')")
+        n_transformed = execjs.eval(f"(({self.challenge})(String('{n}')).split)('{{ return a; }}')")[0]
 
+        
         query_params['n'][0] = n_transformed
 
         encoded_query_params = urlencode(query_params, doseq=True)
         updated_url = urlunparse(parsed_url._replace(query=encoded_query_params))    
 
         return updated_url
+    
+    def get_video_length(self):
+        return int(self.video_json['videoDetails']['lengthSeconds'])

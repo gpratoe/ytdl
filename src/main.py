@@ -18,7 +18,7 @@ def main():
     
     video_url = ext.get_format_url(tag_video)
     audio_url = ext.get_format_url(tag_audio)
-    
+
     dwnloader.download_video(ext.solve_challenge(video_url), ext.solve_challenge(audio_url))
 
 main()
